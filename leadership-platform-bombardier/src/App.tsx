@@ -306,7 +306,6 @@ export default function App() {
                           value={loginForm.username}
                           onChange={(e) => setLoginForm(prev => ({ ...prev, username: e.target.value }))}
                           required
-                        />
                       </div>
                       <div>
                         <Label htmlFor="password">Contraseña</Label>
@@ -316,13 +315,11 @@ export default function App() {
                           value={loginForm.password}
                           onChange={(e) => setLoginForm(prev => ({ ...prev, password: e.target.value }))}
                           required
-                        />
                       </div>
                       <Button type="submit" className="w-full">
                         Iniciar Sesión
                       </Button>
                     </form>
-                  </DialogContent>
                 </Dialog>
               )}
 
@@ -839,43 +836,23 @@ export default function App() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="startDate">Fecha de Inicio</Label>
-                  <Input
-                    id="startDate"
-                    name="startDate"
-                    defaultValue={editingModule.startDate}
-                    required
-                  />
-                </div>
+                  <Label htmlFor="topics">Temas (uno por línea)</Label>
+                  <Textarea
+                    id="topics"
+                    name="topics"
+                    defaultValue={editingModule.topics.join('\n')}
+                    rows={3}
+                />
+              </div>
                 <div>
-                  <Label htmlFor="endDate">Fecha de Fin</Label>
-                  <Input
-                    id="endDate"
-                    name="endDate"
-                    defaultValue={editingModule.endDate}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="topics">Temas (uno por línea)</Label>
-                <Textarea
-                  id="topics"
-                  name="topics"
-                  defaultValue={editingModule.topics.join('\n')}
-                  rows={3}
+                  <Label htmlFor="objectives">Objetivos (uno por línea)</Label>
+                  <Textarea
+                    id="objectives"
+                    name="objectives"
+                    defaultValue={editingModule.objectives.join('\n')}
+                    rows={3}
                 />
               </div>
-
-              <div>
-                <Label htmlFor="objectives">Objetivos (uno por línea)</Label>
-                <Textarea
-                  id="objectives"
-                  name="objectives"
-                  defaultValue={editingModule.objectives.join('\n')}
-                  rows={3}
-                />
               </div>
 
               <div className="flex justify-end space-x-2">
