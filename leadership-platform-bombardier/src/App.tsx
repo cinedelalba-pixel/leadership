@@ -41,7 +41,7 @@ export default function App() {
   const [modules, setModules] = useState<Module[]>([]);
   const [pageContent, setPageContent] = useState<PageContent | null>(null);
   const [resourceFiles, setResourceFiles] = useState<FileItem[]>([]);
-  const [testimonialFiles, setTestimonialFiles] = useState<FileItem[]>([]);
+  const [testimonialFiles, setTestimoniales] = useState<FileItem[]>([]);
 
   // Estados de formularios
   const [loginForm, setLoginForm] = useState({ username: '', password: '' });
@@ -88,7 +88,7 @@ export default function App() {
       const resources = await apiClient.getFilesByCategory('resources');
       const testimonials = await apiClient.getFilesByCategory('testimonials');
       setResourceFiles(resources);
-      setTestimonialFiles(testimonials);
+      setTestimoniales(testimonials);
     } catch (error) {
       console.error('Error al cargar datos iniciales:', error);
       toast.error('Error al cargar datos');
@@ -178,7 +178,7 @@ export default function App() {
         setResourceFiles(resources);
       } else if (category === 'testimonials') {
         const testimonials = await apiClient.getFilesByCategory('testimonials');
-        setTestimonialFiles(testimonials);
+        setTestimoniales(testimonials);
       }
 
       toast.success('Archivo subido correctamente');
@@ -201,7 +201,7 @@ export default function App() {
         setResourceFiles(resources);
       } else if (category === 'testimonials') {
         const testimonials = await apiClient.getFilesByCategory('testimonials');
-        setTestimonialFiles(testimonials);
+        setTestimoniales(testimonials);
       } else {
         // Recargar módulos para archivos de módulos
         const updatedModules = await apiClient.getModules();
@@ -504,8 +504,7 @@ export default function App() {
                           <Edit className="h-4 w-4" />
                         </Button>
                       )}
-                    </div>
-                  </CardHeader>
+                  </div>
                   <CardContent className="space-y-4">
                     <div>
                       <h4 className="font-semibold mb-2">Temas:</h4>
@@ -673,9 +672,9 @@ export default function App() {
                           {file.description && (
                             <p className="text-xs text-gray-500 mt-1">{file.description}</p>
                           )}
-                        </div>
                       </div>
-                      <div className="flex space-x-1 ml-2">
+                    </div>
+                    <div className="flex space-x-1 ml-2">
                         <Button
                           variant="ghost"
                           size="sm"
