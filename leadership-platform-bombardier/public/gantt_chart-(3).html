@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<script type="text/javascript">
+  // This is a CodeSandbox injection script that's used to
+  // add navigation and inspector functionality to the preview
+  (function () {
+    // 1) Get the <script> tag that's currently running:
+    var me = document.currentScript;
+
+    // 2) Create the blocking‐style <script> to load:
+    var script = document.createElement("script");
+    script.src = "https://codesandbox.io/p/preview-protocol.js";
+
+    // By default a dynamically‐inserted <script> is async=true.
+    // Turn async off to make it behave like a normal blocking <script>:
+    script.async = false;
+    // (Do NOT set defer.)
+
+    // 3) Insert it immediately after the current <script>:
+    me.parentNode.insertBefore(script, me);
+  })();
+
+  const isIFramePreview = window.top !== window.self;
+
+  // Only run this script in editor context
+  if (isIFramePreview) {
+    // This script is used to enable Chrome DevTools functionality
+    (function () {
+      var script = document.createElement("script");
+      script.src =
+        "https://codesandbox.io/p/chrome-devtool/protocol/index.js";
+
+      script.onload = () => {
+        const devtoolProtocol = window.chobitsu;
+        if (devtoolProtocol) {
+          window.addEventListener("message", (event) => {
+            const { type, data } = event.data;
+
+            if (type === "FROM_DEVTOOL") {
+              devtoolProtocol.sendRawMessage(data);
+            }
+          });
+
+          devtoolProtocol.setOnMessage((data) => {
+            if (data.includes('"id":"tmp')) {
+              return;
+            }
+
+            window.parent.postMessage({ type: "TO_DEVTOOL", data }, "*");
+          });
+
+          devtoolProtocol.sendRawMessage(
+            `{"id":5,"method":"Runtime.enable","params":{}}`
+          );
+        }        
+      }
+
+      (document.head || document.documentElement).prepend(script);
+    })();
+  }
+
+  if (typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ === "undefined") {
+    let nextID = 0;
+    let hook = (__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
+      renderers: new Map(),
+      supportsFiber: true,
+      inject: (renderer) => {
+        const id = nextID++;
+        hook.renderers.set(id, renderer);
+        return id;
+      },
+      onScheduleFiberRoot() {},
+      onCommitFiberRoot() {},
+      onCommitFiberUnmount() {},
+    });
+  }
+
+  document.currentScript.remove();
+</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagrama de Gantt - Cronograma de Proyecto</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 100%;
+            overflow-x: auto;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 24px;
+        }
+        
+        .gantt-container {
+            min-width: 1200px;
+            overflow-x: auto;
+        }
+        
+        .gantt-header {
+            display: flex;
+            border-bottom: 2px solid #34495e;
+            margin-bottom: 5px;
+        }
+        
+        .task-column {
+            width: 350px;
+            font-weight: bold;
+            padding: 10px;
+            background: #34495e;
+            color: white;
+            border-right: 1px solid #fff;
+        }
+        
+        .dates-column {
+            width: 120px;
+            font-weight: bold;
+            padding: 10px;
+            background: #34495e;
+            color: white;
+            border-right: 1px solid #fff;
+            text-align: center;
+        }
+        
+        .timeline-column {
+            flex: 1;
+            font-weight: bold;
+            padding: 10px;
+            background: #34495e;
+            color: white;
+            text-align: center;
+        }
+        
+        .gantt-row {
+            display: flex;
+            border-bottom: 1px solid #ecf0f1;
+            min-height: 40px;
+            position: relative;
+        }
+        
+        .gantt-row:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .task-info {
+            width: 350px;
+            padding: 8px;
+            border-right: 1px solid #bdc3c7;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .task-name {
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 2px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            color: white;
+        }
+        
+        .task-name.grupo-preparacion { background: linear-gradient(135deg, #3498db, #2980b9); }
+        .task-name.grupo-bamlt { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+        .task-name.grupo-modulo1 { background: linear-gradient(135deg, #f39c12, #e67e22); }
+        .task-name.grupo-modulo2 { background: linear-gradient(135deg, #27ae60, #229954); }
+        .task-name.grupo-modulo3 { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+        .task-name.grupo-coaching { background: linear-gradient(135deg, #1abc9c, #16a085); }
+        .task-name.grupo-cierre { background: linear-gradient(135deg, #34495e, #2c3e50); }
+        .task-name.grupo-otros { background: linear-gradient(135deg, #95a5a6, #7f8c8d); }
+        
+        .task-details {
+            font-size: 11px;
+            color: #7f8c8d;
+        }
+        
+        .task-dates {
+            width: 120px;
+            padding: 8px;
+            border-right: 1px solid #bdc3c7;
+            text-align: center;
+            font-size: 11px;
+            color: #34495e;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .timeline {
+            flex: 1;
+            position: relative;
+            padding: 5px;
+        }
+        
+        .timeline-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                linear-gradient(to right, rgba(189, 195, 199, 0.3) 1px, transparent 1px);
+            background-size: 20px 100%;
+        }
+        
+        .task-bar {
+            position: absolute;
+            height: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        
+        .grupo-preparacion { background: linear-gradient(135deg, #3498db, #2980b9); }
+        .grupo-bamlt { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+        .grupo-modulo1 { background: linear-gradient(135deg, #f39c12, #e67e22); }
+        .grupo-modulo2 { background: linear-gradient(135deg, #27ae60, #229954); }
+        .grupo-modulo3 { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+        .grupo-coaching { background: linear-gradient(135deg, #1abc9c, #16a085); }
+        .grupo-cierre { background: linear-gradient(135deg, #34495e, #2c3e50); }
+        .grupo-otros { background: linear-gradient(135deg, #95a5a6, #7f8c8d); }
+        
+        .milestone {
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-bottom: 15px solid #e74c3c;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .legend {
+            margin-top: 20px;
+            padding: 15px;
+            background: #ecf0f1;
+            border-radius: 5px;
+        }
+        
+        .legend h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        
+        .legend-item {
+            display: inline-block;
+            margin: 5px 10px;
+            padding: 5px 10px;
+            border-radius: 5px;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .month-header {
+            display: flex;
+            border-bottom: 1px solid #bdc3c7;
+            background: #ecf0f1;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .month-cell {
+            flex: 1;
+            padding: 5px;
+            text-align: center;
+            border-right: 1px solid #bdc3c7;
+            font-size: 12px;
+        }
+        
+        .current-date {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #e74c3c;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Diagrama de Gantt - Cronograma de Proyecto</h1>
+        
+        <div class="gantt-container">
+            <div class="gantt-header">
+                <div class="task-column">Actividad</div>
+                <div class="dates-column">Fechas</div>
+                <div class="timeline-column">Cronograma (Julio - Diciembre 2025)</div>
+            </div>
+            
+            <div class="month-header">
+                <div class="task-column" style="background: transparent; color: #2c3e50;"></div>
+                <div class="dates-column" style="background: transparent; color: #2c3e50;"></div>
+                <div class="month-cell">Jul</div>
+                <div class="month-cell">Ago</div>
+                <div class="month-cell">Sep</div>
+                <div class="month-cell">Oct</div>
+                <div class="month-cell">Nov</div>
+                <div class="month-cell">Dic</div>
+            </div>
+            
+            <div id="gantt-rows"></div>
+        </div>
+        
+        <div class="legend">
+            <h3>🎨 Leyenda por Grupos</h3>
+            <span class="legend-item grupo-preparacion">Preparación</span>
+            <span class="legend-item grupo-bamlt">BAMLT</span>
+            <span class="legend-item grupo-modulo1">Módulo 1</span>
+            <span class="legend-item grupo-modulo2">Módulo 2</span>
+            <span class="legend-item grupo-modulo3">Módulo 3</span>
+            <span class="legend-item grupo-coaching">Coaching</span>
+            <span class="legend-item grupo-cierre">Cierre</span>
+            <span class="legend-item grupo-otros">Otros</span>
+        </div>
+    </div>
+
+    <script>
+        const tasks = [
+            {id: 1, name: "Recopilación de Información - Encuesta de Engagement", grupo: "Preparación", responsable: "Equipo de RRHH", inicio: "2025-07-07", fin: "2025-07-14", duracion: 7, estado: "Planificado"},
+            {id: 2, name: "Preparación de Materiales", grupo: "Preparación", responsable: "Equipo de Formación", inicio: "2025-07-14", fin: "2025-08-04", duracion: 21, estado: "Planificado"},
+            {id: 3, name: "Sesión 1 Executive Brief (on line)", grupo: "BAMLT", responsable: "Gonzalo Rivas", inicio: "2025-07-21", fin: "2025-07-21", duracion: 1, estado: "Planificado"},
+            {id: 4, name: "Sesión 2 Executive Brief (on line)", grupo: "BAMLT", responsable: "Gonzalo Rivas", inicio: "2025-08-04", fin: "2025-08-04", duracion: 1, estado: "Planificado"},
+            {id: 5, name: "Autoevaluación de Coaching", grupo: "Otros", responsable: "", inicio: "2025-07-18", fin: "2025-07-25", duracion: 7, estado: "Planificado"},
+            {id: 7, name: "Módulo 1 - Grupo 1 (4 hrs)", grupo: "Módulo 1", responsable: "Gonzalo Rivas", inicio: "2025-08-06", fin: "2025-08-06", duracion: 1, estado: "Planificado"},
+            {id: 8, name: "Módulo 1 - Grupo 2 (4 hrs)", grupo: "Módulo 1", responsable: "Gonzalo Rivas", inicio: "2025-08-07", fin: "2025-08-07", duracion: 1, estado: "Planificado"},
+            {id: 6, name: "Sesión 1 de Coaching con Directores", grupo: "Coaching", responsable: "Coach Senior", inicio: "2025-08-11", fin: "2025-08-15", duracion: 5, estado: "Planificado"},
+            {id: 9, name: "Módulo 1 - Complemento Grupo 1 (4 hrs)", grupo: "Módulo 1", responsable: "Gonzalo Rivas", inicio: "2025-08-12", fin: "2025-08-12", duracion: 1, estado: "Planificado"},
+            {id: 10, name: "Módulo 1 - Complemento Grupo 2 (4 hrs)", grupo: "Módulo 1", responsable: "Gonzalo Rivas", inicio: "2025-08-13", fin: "2025-08-13", duracion: 1, estado: "Planificado"},
+            {id: 14, name: "Autoevaluación DISC", grupo: "Otros", responsable: "", inicio: "2025-08-13", fin: "2025-08-20", duracion: 7, estado: "Planificado"},
+            {id: 11, name: "Sesión de Coaching con Colaboradores", grupo: "Coaching", responsable: "Gonzalo / Carlos", inicio: "2025-08-18", fin: "2025-08-29", duracion: 11, estado: "Planificado"},
+            {id: 12, name: "Follow up 1 Grupo 1", grupo: "Coaching", responsable: "Coach Senior", inicio: "2025-09-03", fin: "2025-09-03", duracion: 1, estado: "Planificado"},
+            {id: 12.5, name: "Follow up 1 Grupo 2", grupo: "Coaching", responsable: "Coach Senior", inicio: "2025-09-04", fin: "2025-09-04", duracion: 1, estado: "Planificado"},
+            {id: 13, name: "Sesión 2 de Coaching con Directores", grupo: "Coaching", responsable: "Coach Senior", inicio: "2025-09-05", fin: "2025-09-09", duracion: 5, estado: "Planificado"},
+            {id: 15, name: "Módulo 2 - Grupo 1 (4 hrs)", grupo: "Módulo 2", responsable: "Carlos Nava", inicio: "2025-09-10", fin: "2025-09-10", duracion: 1, estado: "Planificado"},
+            {id: 16, name: "Módulo 2 - Grupo 2 (4 hrs)", grupo: "Módulo 2", responsable: "Carlos Nava", inicio: "2025-09-11", fin: "2025-09-11", duracion: 1, estado: "Planificado"},
+            {id: 30, name: "Evaluación Final", grupo: "Cierre", responsable: "Equipo de Evaluación", inicio: "2025-09-15", fin: "2025-09-18", duracion: 3, estado: "Planificado"},
+            {id: 31, name: "Sesión de Presentación Final", grupo: "Cierre", responsable: "Equipo Completo", inicio: "2025-09-18", fin: "2025-09-19", duracion: 1, estado: "Planificado"},
+            {id: 17, name: "Módulo 2 - Complemento Grupo 1 (4 hrs)", grupo: "Módulo 2", responsable: "Carlos Nava", inicio: "2025-09-23", fin: "2025-09-23", duracion: 1, estado: "Planificado"},
+            {id: 18, name: "Módulo 2 - Complemento Grupo 2 (4 hrs)", grupo: "Módulo 2", responsable: "Carlos Nava", inicio: "2025-09-24", fin: "2025-09-24", duracion: 1, estado: "Planificado"},
+            {id: 22, name: "Autoevaluación Lencioni", grupo: "Otros", responsable: "", inicio: "2025-09-24", fin: "2025-10-01", duracion: 7, estado: "Planificado"},
+            {id: 19, name: "Sesión de Coaching con Colaboradores", grupo: "Coaching", responsable: "", inicio: "2025-09-25", fin: "2025-10-09", duracion: 14, estado: "Planificado"},
+            {id: 20, name: "Follow up 2 Grupo 1", grupo: "Coaching", responsable: "Coach Senior", inicio: "2025-10-14", fin: "2025-10-14", duracion: 1, estado: "Planificado"},
+            {id: 20.5, name: "Follow up 2 Grupo 2", grupo: "Coaching", responsable: "", inicio: "2025-10-14", fin: "2025-10-14", duracion: 1, estado: "Planificado"},
+            {id: 21, name: "Sesión 3 de Coaching con Directores", grupo: "Coaching", responsable: "", inicio: "2025-10-15", fin: "2025-10-17", duracion: 3, estado: "Planificado"},
+            {id: 23, name: "Módulo 3 - Grupo 1 (4 hrs)", grupo: "Módulo 3", responsable: "Gonzalo Rivas", inicio: "2025-10-22", fin: "2025-10-22", duracion: 1, estado: "Planificado"},
+            {id: 24, name: "Módulo 3 - Grupo 2 (4 hrs)", grupo: "Módulo 3", responsable: "Gonzalo Rivas", inicio: "2025-10-23", fin: "2025-10-23", duracion: 1, estado: "Planificado"},
+            {id: 25, name: "Módulo 3 - Complemento Grupo 1 (4 hrs)", grupo: "Módulo 3", responsable: "Gonzalo Rivas", inicio: "2025-10-28", fin: "2025-10-28", duracion: 1, estado: "Planificado"},
+            {id: 26, name: "Módulo 3 - Complemento Grupo 2 (4 hrs)", grupo: "Módulo 3", responsable: "Gonzalo Rivas", inicio: "2025-10-29", fin: "2025-10-29", duracion: 1, estado: "Planificado"},
+            {id: 29, name: "Sesión 4 de Coaching con Directores", grupo: "Coaching", responsable: "", inicio: "2025-10-30", fin: "2025-11-03", duracion: 4, estado: "Planificado"},
+            {id: 27, name: "Sesión de Coaching con Colaboradores", grupo: "Coaching", responsable: "", inicio: "2025-11-04", fin: "2025-11-18", duracion: 14, estado: "Planificado"},
+            {id: 28, name: "Follow up 3 Grupo 1", grupo: "Coaching", responsable: "Coach Senior", inicio: "2025-11-20", fin: "2025-11-20", duracion: 1, estado: "Planificado"},
+            {id: 28.5, name: "Follow up 3 Grupo 2", grupo: "Coaching", responsable: "", inicio: "2025-11-20", fin: "2025-11-20", duracion: 1, estado: "Planificado"},
+            {id: 33, name: "Sesión Final de Coaching con Directores", grupo: "Coaching", responsable: "", inicio: "2025-12-03", fin: "2025-12-05", duracion: 3, estado: "Planificado"},
+            {id: 32, name: "Cierre y Entrega de Certificados", grupo: "Cierre", responsable: "Dirección", inicio: "2025-12-08", fin: "2025-12-12", duracion: 5, estado: "Planificado"}
+        ];
+
+        function getGroupClass(grupo) {
+            const groupMap = {
+                'Preparación': 'grupo-preparacion',
+                'BAMLT': 'grupo-bamlt',
+                'Módulo 1': 'grupo-modulo1',
+                'Módulo 2': 'grupo-modulo2',
+                'Módulo 3': 'grupo-modulo3',
+                'Coaching': 'grupo-coaching',
+                'Cierre': 'grupo-cierre',
+                'Otros': 'grupo-otros'
+            };
+            return groupMap[grupo] || 'grupo-otros';
+        }
+
+        function dateToPosition(date) {
+            const startDate = new Date('2025-07-01');
+            const endDate = new Date('2025-12-31');
+            const taskDate = new Date(date);
+            
+            const totalDays = (endDate - startDate) / (1000 * 60 * 60 * 24);
+            const daysPassed = (taskDate - startDate) / (1000 * 60 * 60 * 24);
+            
+            return Math.max(0, Math.min(100, (daysPassed / totalDays) * 100));
+        }
+
+        function formatDateShort(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('es-ES', { 
+                day: '2-digit', 
+                month: '2-digit' 
+            });
+        }
+
+        function getBarContent(task) {
+            if (task.duracion <= 1) {
+                return `${formatDateShort(task.inicio)}`;
+            } else if (task.duracion <= 7) {
+                return `${formatDateShort(task.inicio)}-${formatDateShort(task.fin)}`;
+            } else {
+                return `${task.duracion}d`;
+            }
+        }
+
+        function renderGanttChart() {
+            const container = document.getElementById('gantt-rows');
+            
+            tasks.forEach(task => {
+                const row = document.createElement('div');
+                row.className = 'gantt-row';
+                
+                const startPos = dateToPosition(task.inicio);
+                const endPos = dateToPosition(task.fin);
+                const width = Math.max(1, endPos - startPos);
+                
+                row.innerHTML = `
+                    <div class="task-info">
+                        <div class="task-name ${getGroupClass(task.grupo)}">${task.name}</div>
+                        <div class="task-details">${task.responsable} • ${task.grupo}</div>
+                    </div>
+                    <div class="task-dates">
+                        <div>${formatDateShort(task.inicio)}</div>
+                        <div>${formatDateShort(task.fin)}</div>
+                    </div>
+                    <div class="timeline">
+                        <div class="timeline-grid"></div>
+                        <div class="task-bar ${getGroupClass(task.grupo)}" 
+                             style="left: ${startPos}%; width: ${width}%;">
+                            ${getBarContent(task)}
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(row);
+            });
+            
+            // Línea de fecha actual
+            const currentDate = new Date();
+            const currentPos = dateToPosition(currentDate.toISOString().split('T')[0]);
+            if (currentPos >= 0 && currentPos <= 100) {
+                const currentLine = document.createElement('div');
+                currentLine.className = 'current-date';
+                currentLine.style.left = `${470 + (currentPos / 100) * (document.querySelector('.timeline').offsetWidth)}px`;
+                document.querySelector('.gantt-container').appendChild(currentLine);
+            }
+        }
+
+        // Renderizar el diagrama cuando se carga la página
+        window.addEventListener('load', renderGanttChart);
+    </script>
+</body>
+</html>
