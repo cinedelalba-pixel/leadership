@@ -251,12 +251,11 @@ export default function App() {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             {/* Logo y título */}
-            <div className="flex items-center space-x-4">
-              <img src="/Logo-Bombardier.png" alt="Bombardier" className="h-8" />
-              <img src="/logo.jpg" alt="Leadership Skills Formation" className="h-8" />
-              <div className="hidden md:block">
-                <h1 className="text-xl font-bold text-gray-900">Leadership Skills Formation</h1>
-                <p className="text-sm text-gray-600">Bombardier</p>
+            <div className="flex items-center">
+              <img src="/Logo-Bombardier.png" alt="Bombardier" className="h-8 mr-2" />
+              <div className="flex-1 min-w-0">
+                <h1 className="text-base font-bold text-gray-900 truncate">Leadership Skills Formation</h1>
+                <p className="text-sm text-gray-600 truncate">Bombardier</p>
               </div>
             </div>
 
@@ -320,10 +319,13 @@ export default function App() {
                         Iniciar Sesión
                       </Button>
                     </form>
-                </Dialog>
+                  </DialogContent>
+              ) : (
+                <div className="flex items-center">
+                  <Lock className="h-4 w-4 mr-2" />
+                  Admin
+                </div>
               )}
-
-              {/* Menú móvil */}
               <button
                 className="md:hidden"
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -331,152 +333,151 @@ export default function App() {
                 {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
               </button>
             </div>
+
+            {/* Navegación móvil */}
+            {isMobileMenuOpen && (
+              <div className="md:hidden py-4 border-t border-gray-200">
+                <nav className="flex flex-col space-y-2">
+                  {['inicio', 'repositorio', 'cronograma', 'roadmap', 'recursos', 'testimoniales'].map((section) => (
+                    <button
+                      key={section}
+                      onClick={() => {
+                        setActiveSection(section);
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className={`px-3 py-2 rounded-md text-left font-medium transition-colors ${
+                        activeSection === section
+                          ? 'bg-blue-100 text-blue-700'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                      }`}
+                    >
+                      {section.charAt(0).toUpperCase() + section.slice(1)}
+                    </button>
+                  ))}
+                </nav>
+              </div>
+            )}
           </div>
+        </header>
 
-          {/* Navegación móvil */}
-          {isMobileMenuOpen && (
-            <div className="md:hidden py-4 border-t border-gray-200">
-              <nav className="flex flex-col space-y-2">
-                {['inicio', 'repositorio', 'cronograma', 'roadmap', 'recursos', 'testimoniales'].map((section) => (
-                  <button
-                    key={section}
-                    onClick={() => {
-                      setActiveSection(section);
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className={`px-3 py-2 rounded-md text-left font-medium transition-colors ${
-                      activeSection === section
-                        ? 'bg-blue-100 text-blue-700'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                    }`}
-                  >
-                    {section.charAt(0).toUpperCase() + section.slice(1)}
-                  </button>
-                ))}
-              </nav>
-            </div>
-          )}
-        </div>
-      </header>
+        {/* Contenido principal */}
+        <main className="container mx-auto px-4 py-8">
+          {/* Sección Inicio */}
+          {activeSection === 'inicio' && (
+            <div className="space-y-8">
+              {/* Hero Section */}
+              <div
+                className="relative rounded-2xl overflow-hidden min-h-[400px] flex items-center justify-center text-white"
+                style={{
+                  backgroundImage: 'url(/bomb.jpg)',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  backgroundRepeat: 'no-repeat'
+                }}
+              >
+                <div className="absolute inset-0 bg-black bg-opacity-50"></div>
+                <div className="relative z-10 text-center px-4 max-w-4xl">
+                  <h1 className="text-4xl md:text-6xl font-bold mb-4">
+                    {pageContent?.title || 'Bienvenido al programa Leadership Skills Formation'}
+                  </h1>
+                  <p className="text-lg md:text-xl mb-8 max-w-3xl mx-auto">
+                    {pageContent?.description || 'Desarrolla tus competencias de liderazgo a través de nuestro programa integral de 3 módulos diseñado específicamente para los equipos de Bombardier.'}
+                  </p>
+                  {isAuthenticated && (
+                    <Button
+                      onClick={() => setEditingContent(true)}
+                      variant="secondary"
+                      className="backdrop-blur-sm bg-white/20 hover:bg-white/30"
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Editar Contenido
+                    </Button>
+                  )}
+                </div>
+              </div>
 
-      {/* Contenido principal */}
-      <main className="container mx-auto px-4 py-8">
-        {/* Sección Inicio */}
-        {activeSection === 'inicio' && (
-          <div className="space-y-8">
-            {/* Hero Section */}
-            <div
-              className="relative rounded-2xl overflow-hidden min-h-[400px] flex items-center justify-center text-white"
-              style={{
-                backgroundImage: 'url(/bomb.jpg)',
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                backgroundRepeat: 'no-repeat'
-              }}
-            >
-              <div className="absolute inset-0 bg-black bg-opacity-50"></div>
-              <div className="relative z-10 text-center px-4 max-w-4xl">
-                <h1 className="text-4xl md:text-6xl font-bold mb-4">
-                  {pageContent?.title || 'Bienvenido al programa Leadership Skills Formation'}
-                </h1>
-                <p className="text-lg md:text-xl mb-8 max-w-3xl mx-auto">
-                  {pageContent?.description || 'Desarrolla tus competencias de liderazgo a través de nuestro programa integral de 3 módulos diseñado específicamente para los equipos de Bombardier.'}
-                </p>
-                {isAuthenticated && (
-                  <Button
-                    onClick={() => setEditingContent(true)}
-                    variant="secondary"
-                    className="backdrop-blur-sm bg-white/20 hover:bg-white/30"
-                  >
-                    <Edit className="h-4 w-4 mr-2" />
-                    Editar Contenido
-                  </Button>
-                )}
+              {/* Stats Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <Card className="text-center">
+                  <CardContent className="pt-6">
+                    <Users className="h-12 w-12 mx-auto mb-4 text-blue-600" />
+                    <h3 className="text-2xl font-bold">3 Módulos</h3>
+                    <p className="text-gray-600">Programa Completo</p>
+                  </CardContent>
+                </Card>
+                <Card className="text-center">
+                  <CardContent className="pt-6">
+                    <Calendar className="h-12 w-12 mx-auto mb-4 text-blue-600" />
+                    <h3 className="text-2xl font-bold">6 Meses</h3>
+                    <p className="text-gray-600">Julio - Diciembre 2025</p>
+                  </CardContent>
+                </Card>
+                <Card className="text-center">
+                  <CardContent className="pt-6">
+                    <BookOpen className="h-12 w-12 mx-auto mb-4 text-blue-600" />
+                    <h3 className="text-2xl font-bold">Recursos</h3>
+                    <p className="text-gray-600">Material Didáctico</p>
+                  </CardContent>
+                </Card>
               </div>
             </div>
+          )}
 
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card className="text-center">
-                <CardContent className="pt-6">
-                  <Users className="h-12 w-12 mx-auto mb-4 text-blue-600" />
-                  <h3 className="text-2xl font-bold">3 Módulos</h3>
-                  <p className="text-gray-600">Programa Completo</p>
-                </CardContent>
-              </Card>
-              <Card className="text-center">
-                <CardContent className="pt-6">
-                  <Calendar className="h-12 w-12 mx-auto mb-4 text-blue-600" />
-                  <h3 className="text-2xl font-bold">6 Meses</h3>
-                  <p className="text-gray-600">Julio - Diciembre 2025</p>
-                </CardContent>
-              </Card>
-              <Card className="text-center">
-                <CardContent className="pt-6">
-                  <BookOpen className="h-12 w-12 mx-auto mb-4 text-blue-600" />
-                  <h3 className="text-2xl font-bold">Recursos</h3>
-                  <p className="text-gray-600">Material Didáctico</p>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        )}
-
-        {/* Sección Repositorio (Módulos) */}
-        {activeSection === 'repositorio' && (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-3xl font-bold">Módulos del Programa</h2>
-              {isAuthenticated && (
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button>
-                      <Upload className="h-4 w-4 mr-2" />
-                      Subir Archivo
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Subir Archivo a Módulo</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="module-select">Seleccionar Módulo</Label>
-                        <select
-                          id="module-select"
-                          className="w-full p-2 border border-gray-300 rounded-md"
-                          value={selectedModuleForUpload}
-                          onChange={(e) => setSelectedModuleForUpload(e.target.value)}
-                        >
-                          <option value="">Seleccionar módulo...</option>
-                          {modules.map((module) => (
-                            <option key={module.id} value={module.id.toString()}>
-                              {module.title}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <Label htmlFor="file-input">Archivo</Label>
-                        <Input
-                          id="file-input"
-                          type="file"
-                          accept=".pdf,.pptx,.ppt,.docx,.doc,.xlsx,.xls,.mp4,.avi,.mov,.mp3,.wav,.jpg,.jpeg,.png,.gif"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file && selectedModuleForUpload) {
-                              handleFileUpload(file, 'module');
-                            }
-                          }}
-                          disabled={uploadingFile || !selectedModuleForUpload}
-                        />
-                      </div>
-                      {uploadingFile && (
-                        <div className="text-center">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                          <p className="mt-2 text-sm text-gray-600">Subiendo archivo...</p>
+          {/* Sección Repositorio (Módulos) */}
+          {activeSection === 'repositorio' && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-3xl font-bold">Módulos del Programa</h2>
+                {isAuthenticated && (
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button>
+                        <Upload className="h-4 w-4 mr-2" />
+                        Subir Archivo
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Subir Archivo a Módulo</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div>
+                          <Label htmlFor="module-select">Seleccionar Módulo</Label>
+                          <select
+                            id="module-select"
+                            className="w-full p-2 border border-gray-300 rounded-md"
+                            value={selectedModuleForUpload}
+                            onChange={(e) => setSelectedModuleForUpload(e.target.value)}
+                          >
+                            <option value="">Seleccionar módulo...</option>
+                            {modules.map((module) => (
+                              <option key={module.id} value={module.id.toString()}>
+                                {module.title}
+                              </option>
+                            ))}
+                          </select>
                         </div>
-                      )}
+                        <div>
+                          <Label htmlFor="file-input">Archivo</Label>
+                          <Input
+                            id="file-input"
+                            type="file"
+                            accept=".pdf,.pptx,.ppt,.docx,.doc,.xlsx,.xls,.mp4,.avi,.mov,.mp3,.wav,.jpg,.jpeg,.png,.gif"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file && selectedModuleForUpload) {
+                                handleFileUpload(file, 'module');
+                              }
+                            }}
+                            disabled={uploadingFile || !selectedModuleForUpload}
+                          />
+                        </div>
+                        {uploadingFile && (
+                          <div className="text-center">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                            <p className="mt-2 text-sm text-gray-600">Subiendo archivo...</p>
+                          </div>
+                        )}
                     </div>
                   </DialogContent>
                 </Dialog>
@@ -586,9 +587,9 @@ export default function App() {
                           {file.description && (
                             <p className="text-xs text-gray-500 mt-1">{file.description}</p>
                           )}
-                        </div>
                       </div>
-                      <div className="flex space-x-1 ml-2">
+                    </div>
+                    <div className="flex space-x-1 ml-2">
                         <Button
                           variant="ghost"
                           size="sm"
@@ -597,17 +598,16 @@ export default function App() {
                           <a href={file.originalName} download={file.originalName}>
                             <Download className="h-4 w-4" />
                           </a>
-                        </Button>
-                        {isAuthenticated && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteFile(file.id, 'resources')}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        )}
                       </div>
+                      {isAuthenticated && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteFile(file.id, 'resources')}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
